@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using Photon.Pun;
 using PolaroidMenu.Classes;
 using PolaroidMenu.Notifications;
 using System;
@@ -12,13 +13,12 @@ using static PolaroidMenu.Settings;
 
 namespace PolaroidMenu.Menu
 {
-    [HarmonyPatch(typeof(GorillaLocomotion.Player))]
-    [HarmonyPatch("FixedUpdate", MethodType.Normal)]
-    //[HarmonyPatch("LateUpdate", MethodType.Normal)]
+
     public class Main : MonoBehaviour
     {
+        public static float kgDebounce = 0;
         // Constant
-        public static void Prefix()
+        public void FixedUpdate()
         {
             // Initialize Menu
                 try
@@ -71,38 +71,15 @@ namespace PolaroidMenu.Menu
                 }
 
             // Constant
-                try
-                {
+
                     // Pre-Execution
                         fpsObject.text = "FPS: " + Mathf.Ceil(1f / Time.unscaledDeltaTime).ToString();
 
                     // Execute Enabled mods
-                        foreach (ButtonInfo[] buttonlist in buttons)
-                        {
-                            foreach (ButtonInfo v in buttonlist)
-                            {
-                                if (v.enabled)
-                                {
-                                    if (v.method != null)
-                                    {
-                                        try
-                                        {
-                                            v.method.Invoke();
-                                        }
-                                        catch (Exception exc)
-                                        {
-                                            UnityEngine.Debug.LogError(string.Format("{0} // Error with mod {1} at {2}: {3}", PluginInfo.Name, v.buttonText, exc.StackTrace, exc.Message));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                } catch (Exception exc)
-                {
-                    UnityEngine.Debug.LogError(string.Format("{0} // Error with executing mods at {1}: {2}", PluginInfo.Name, exc.StackTrace, exc.Message));
-                }
+                        
+                
 
-                if (navType == 1)
+                if (navType == 1 && menu != null)
                 {
                     if (Time.time > PolaroidMenu.Classes.Button.buttonCooldown && ControllerInputPoller.instance.rightControllerIndexFloat > 0f)
                     {
@@ -137,6 +114,7 @@ namespace PolaroidMenu.Menu
                 menuBackground = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 UnityEngine.Object.Destroy(menuBackground.GetComponent<Rigidbody>());
                 UnityEngine.Object.Destroy(menuBackground.GetComponent<BoxCollider>());
+                menuBackground.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
                 menuBackground.transform.parent = menu.transform;
                 menuBackground.transform.rotation = Quaternion.identity;
                 menuBackground.transform.localScale = menuSize;
@@ -198,7 +176,9 @@ namespace PolaroidMenu.Menu
                     fpsObject.horizontalOverflow = UnityEngine.HorizontalWrapMode.Overflow;
                     fpsObject.resizeTextForBestFit = true;
                     fpsObject.resizeTextMinSize = 0;
-                    RectTransform component2 = fpsObject.GetComponent<RectTransform>();
+                     //component.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
+                //fpsObject.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
+                RectTransform component2 = fpsObject.GetComponent<RectTransform>();
                     component2.localPosition = Vector3.zero;
                     component2.sizeDelta = new Vector2(0.28f, 0.02f);
                     component2.position = new Vector3(0.06f, 0f, 0.135f);
@@ -221,8 +201,9 @@ namespace PolaroidMenu.Menu
                         disconnectbutton.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
                         disconnectbutton.transform.localPosition = new Vector3(0.56f, 0f, 0.6f);
                         disconnectbutton.GetComponent<Renderer>().material.color = buttonColors[0].colors[0].color;
+                        disconnectbutton.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
                         disconnectbutton.AddComponent<Classes.Button>().relatedText = "Disconnect";
-
+                       
                         colorChanger = disconnectbutton.AddComponent<ColorChanger>();
                         colorChanger.colorInfo = buttonColors[0];
                         colorChanger.Start();
@@ -268,7 +249,7 @@ namespace PolaroidMenu.Menu
                 gameObject.transform.localPosition = new Vector3(0.56f, 0.65f, 0);
                 gameObject.GetComponent<Renderer>().material.color = buttonColors[0].colors[0].color;
                 gameObject.AddComponent<Classes.Button>().relatedText = "PreviousPage";
-
+                gameObject.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
                 colorChanger = gameObject.AddComponent<ColorChanger>();
                 colorChanger.colorInfo = buttonColors[0];
                 colorChanger.Start();
@@ -309,7 +290,7 @@ namespace PolaroidMenu.Menu
                 colorChanger = gameObject.AddComponent<ColorChanger>();
                 colorChanger.colorInfo = buttonColors[0];
                 colorChanger.Start();
-
+                gameObject.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
                 text = new GameObject
                 {
                     transform =
@@ -353,7 +334,7 @@ namespace PolaroidMenu.Menu
             gameObject.transform.localScale = new Vector3(0.09f, 0.9f, 0.08f);
             gameObject.transform.localPosition = new Vector3(0.56f, 0f, 0.28f - offset);
             gameObject.AddComponent<Classes.Button>().relatedText = method.buttonText;
-
+            gameObject.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
             ColorChanger colorChanger = gameObject.AddComponent<ColorChanger>();
             if (method.enabled)
             {
@@ -499,6 +480,10 @@ namespace PolaroidMenu.Menu
         public static void Toggle(string buttonText)
         {
             int lastPage = ((buttons[buttonsType].Length + buttonsPerPage - 1) / buttonsPerPage) - 1;
+            if (buttonText == "Disconnect")
+            {
+                PhotonNetwork.Disconnect();
+            }
             if (buttonText == "PreviousPage")
             {
                 pageNumber--;
@@ -598,5 +583,11 @@ namespace PolaroidMenu.Menu
             public static float flySpeed = 14f;
             public static int flyType = 0;
         public static int navType = 0;
+        public static int timeType = 0;
+        public static int nameCycleInt = 0;
+        public static float nameCycleDelay = 0;
+
+        //fonts
+        public static Font MarioFont = Font.CreateDynamicFontFromOSFont("Super Mario 256", 24);
     }
 }

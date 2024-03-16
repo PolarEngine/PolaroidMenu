@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 namespace PolaroidMenu.Patches
@@ -12,6 +13,8 @@ namespace PolaroidMenu.Patches
             return false;
         }
     }
+
+
 
     [HarmonyPatch(typeof(GorillaNot), "LogErrorCount")]
     public class NoLogErrorCount : MonoBehaviour

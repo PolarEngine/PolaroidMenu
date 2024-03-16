@@ -70,6 +70,26 @@ namespace PolaroidMenu.Mods
             GetIndex("Fly Speed").overlapText = "Fly Speed [<color=green>" + flytypes[flyType] + "</color>]";
         }
 
+        public static void AddToTImeType()
+        {
+            string[] Timetypes = new string[]
+            {
+        "Night","Day"
+            };
+
+            timeType++;
+            if (timeType > Timetypes.Length - 1)
+            {
+                timeType = 0;
+            }
+
+            BetterDayNightManager.instance.SetTimeOfDay(timeType);
+
+            GetIndex("Time").overlapText = "Time [<color=green>" + Timetypes[timeType] + "</color>]";
+        }
+
+        //BetterDayNightManager.instance.SetTimeOfDay(0);
+
         public static void AntiReport()
         {
             foreach (Photon.Realtime.Player player in PhotonNetwork.PlayerListOthers)

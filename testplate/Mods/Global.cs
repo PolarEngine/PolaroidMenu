@@ -8,5 +8,20 @@ namespace PolaroidMenu.Mods
         {
             buttonsType = 0;
         }
+
+        public static void OpenOverpowered()
+        {
+            buttonsType = 4;
+        }
+
+        public static void OpenMovement()
+        {
+            buttonsType = 5;
+        }
+
+        public static void OpenPlayer()
+        {
+            buttonsType = 6;
+        }
     }
 }

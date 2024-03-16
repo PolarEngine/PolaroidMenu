@@ -20,8 +20,16 @@ namespace PolaroidMenu
             new GradientColorKey(Color.black, 1f)
         };
 
+        static GradientColorKey[] yellowFade = new GradientColorKey[]
+        {
+            new GradientColorKey(Color.yellow, 0f),
+            new GradientColorKey(Color.black, 0.5f),
+            new GradientColorKey(Color.yellow, 1f)
+        };
+
         public static ExtGradient magentaColor = new ExtGradient { colors = GetSolidGradient(Color.magenta) };
         public static ExtGradient redFadeGradient = new ExtGradient { colors = BlackAndWhitef };
+        public static ExtGradient yellowFadeGradient = new ExtGradient { colors = yellowFade };
         public static ExtGradient rainbowColor = new ExtGradient { isRainbow = true };
         public static ExtGradient backgroundColor = new ExtGradient { isRainbow = true };//isRainbow = true};
         public static ExtGradient[] buttonColors = new ExtGradient[]
@@ -36,7 +44,8 @@ namespace PolaroidMenu
         };
 
         public static Font currentFont = (Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font);
-
+        //public static Font currentFont = Font.CreateDynamicFontFromOSFont("System Bold", 24);
+        //public static Font currentFont = Font.CreateDynamicFontFromOSFont("Pokemon Solid Normal", 24);
         public static bool fpsCounter = true;
         public static bool disconnectButton = true;
         public static bool rightHanded = false;

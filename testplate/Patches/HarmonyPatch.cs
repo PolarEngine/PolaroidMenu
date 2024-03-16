@@ -8,6 +8,8 @@ namespace PolaroidMenu.Patches
     {
         public static bool IsPatched { get; private set; }
 
+
+
         internal static void ApplyHarmonyPatches()
         {
             if (!IsPatched)

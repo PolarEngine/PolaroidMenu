@@ -8,6 +8,8 @@ using UnityEngine.InputSystem;
 using Photon.Realtime;
 using Photon.Pun;
 using ExitGames.Client.Photon;
+using static UnityEngine.GridBrushBase;
+using System.Reflection;
 
 namespace PolaroidMenu.Mods
 {
@@ -32,17 +34,107 @@ namespace PolaroidMenu.Mods
         private static GameObject jump_right_local = null;
 
         private static Vector3 scale = new Vector3(0.0125f, 0.28f, 0.3825f);
+        private static Vector3 walkPos;
+        private static Vector3 walkNormal;
+
+        public static void TeleportToStump()
+        {
+            foreach (MeshCollider mesh in Resources.FindObjectsOfTypeAll<MeshCollider>())
+            {
+                mesh.enabled = false;
+            }
+            GorillaLocomotion.Player.Instance.transform.position = new Vector3(-66.4848f, 11.8871f, -82.6619f);
+            foreach (MeshCollider mesh in Resources.FindObjectsOfTypeAll<MeshCollider>())
+            {
+                mesh.enabled = false;
+            }
+        }
+
+        public static void LowGravity()
+        {
+            GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(Vector3.up * (Time.deltaTime * (6.66f / Time.deltaTime)), ForceMode.Acceleration);
+        }
+
+        public static void ZeroGravity()
+        {
+            GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(Vector3.up * (Time.deltaTime * (9.81f / Time.deltaTime)), ForceMode.Acceleration);
+        }
+
+        public static void HighGravity()
+        {
+            GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(Vector3.down * (Time.deltaTime * (6.66f / Time.deltaTime)), ForceMode.Acceleration);
+        }
+        public static void FakeOculusMenu()
+        {
+            if (ControllerInputPoller.instance.rightGrab)
+            {
+                GorillaTagger.Instance.offlineVRRig.leftHandTransform.position = GorillaTagger.Instance.bodyCollider.transform.position;
+                GorillaTagger.Instance.offlineVRRig.leftHandTransform.rotation = GorillaTagger.Instance.bodyCollider.transform.rotation;
+                GorillaTagger.Instance.offlineVRRig.rightHandTransform.position = GorillaTagger.Instance.bodyCollider.transform.position;
+                GorillaTagger.Instance.offlineVRRig.rightHandTransform.rotation = GorillaTagger.Instance.bodyCollider.transform.rotation;
+            }
+        }
+        public static void WallWalk()
+        {
+            // Credits to iidk since he is the cooker when it comes to comp cheats
+            if ((GorillaLocomotion.Player.Instance.wasLeftHandTouching || GorillaLocomotion.Player.Instance.wasRightHandTouching) && ControllerInputPoller.instance.rightGrab || ControllerInputPoller.instance.leftGrab)
+            {
+                FieldInfo fieldInfo = typeof(GorillaLocomotion.Player).GetField("lastHitInfoHand", BindingFlags.NonPublic | BindingFlags.Instance);
+                RaycastHit ray = (RaycastHit)fieldInfo.GetValue(GorillaLocomotion.Player.Instance);
+                walkPos = ray.point;
+                walkNormal = ray.normal;
+            }
+
+            if (!ControllerInputPoller.instance.rightGrab)
+            {
+                walkPos = Vector3.zero;
+            }
+
+            if (walkPos != Vector3.zero)
+            {
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(walkNormal * -10, ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(Vector3.up * (Time.deltaTime * (9.81f / Time.deltaTime)), ForceMode.Acceleration);
+            }
+        }
 
         public static void UpAndDown()
         {
             if (ControllerInputPoller.instance.rightControllerIndexFloat > 0f)
             {
-                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(new Vector3(0, 1000, 0), ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(new Vector3(0, 500, 0), ForceMode.Acceleration);
             }
 
             if (ControllerInputPoller.instance.leftControllerIndexFloat > 0f)
             {
-                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(new Vector3(0, -1000, 0), ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(new Vector3(0, -500, 0), ForceMode.Acceleration);
+            }
+        }
+
+        public static void SlingshotFly()
+        {
+            if (ControllerInputPoller.instance.rightControllerPrimaryButton)
+            {
+                GorillaLocomotion.Player.Instance.GetComponent<Rigidbody>().velocity += GorillaLocomotion.Player.Instance.headCollider.transform.forward * Time.deltaTime * (13 * 2);
+            }
+
+            if (ControllerInputPoller.instance.rightControllerPrimaryButton && ControllerInputPoller.instance.rightControllerSecondaryButton)
+            {
+                GorillaLocomotion.Player.Instance.GetComponent<Rigidbody>().velocity += GorillaLocomotion.Player.Instance.headCollider.transform.up * 3;
+            }
+        }
+
+        public static void HandFly()
+        {
+            if (ControllerInputPoller.instance.leftControllerPrimaryButton)
+            {
+                GorillaLocomotion.Player.Instance.transform.position += (GorillaLocomotion.Player.Instance.leftControllerTransform.forward * Time.deltaTime) * Main.flySpeed;
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.velocity = Vector3.zero;
+            }
+
+            if (ControllerInputPoller.instance.rightControllerPrimaryButton)
+            {
+                GorillaLocomotion.Player.Instance.transform.position += (GorillaLocomotion.Player.Instance.rightControllerTransform.forward * Time.deltaTime) * Main.flySpeed;
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.velocity = Vector3.zero;
             }
         }
 
@@ -50,13 +142,148 @@ namespace PolaroidMenu.Mods
         {
             if (ControllerInputPoller.instance.leftGrab)
             {
-                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(GorillaTagger.Instance.offlineVRRig.leftHandTransform.right, ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(GorillaLocomotion.Player.Instance.leftControllerTransform.right, ForceMode.Acceleration);
             }
 
             if (ControllerInputPoller.instance.rightGrab)
             {
-                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(GorillaTagger.Instance.offlineVRRig.rightHandTransform.right, ForceMode.Acceleration);
+                GorillaLocomotion.Player.Instance.bodyCollider.attachedRigidbody.AddForce(GorillaLocomotion.Player.Instance.rightControllerTransform.right, ForceMode.Acceleration);
             }
+        }
+        private static bool isLeftGrappling;
+        private static bool isRightGrappling;
+        private static SpringJoint rightjoint;
+        private static Vector3 leftgrapplePoint;
+        private static Vector3 rightgrapplePoint;
+        public static SpringJoint leftjoint;
+        public static void SpiderMan()
+        {
+            
+            bool leftGrab = ControllerInputPoller.instance.leftGrab;
+            bool rightGrab = ControllerInputPoller.instance.rightGrab;
+            if (leftGrab)
+            {
+                if (!isLeftGrappling)
+                {
+                    isLeftGrappling = true;
+                    RaycastHit lefthit;
+                    if (Physics.Raycast(GorillaTagger.Instance.leftHandTransform.position, GorillaTagger.Instance.leftHandTransform.forward, out lefthit, 100f))
+                    {
+                        leftgrapplePoint = lefthit.point;
+
+                        leftjoint = GorillaTagger.Instance.gameObject.AddComponent<SpringJoint>();
+                        leftjoint.autoConfigureConnectedAnchor = false;
+                        leftjoint.connectedAnchor = leftgrapplePoint;
+
+                        float leftdistanceFromPoint = Vector3.Distance(GorillaTagger.Instance.bodyCollider.attachedRigidbody.position, leftgrapplePoint);
+
+                        leftjoint.maxDistance = leftdistanceFromPoint * 0.8f;
+                        leftjoint.minDistance = leftdistanceFromPoint * 0.25f;
+
+                        leftjoint.spring = 20f;
+                        leftjoint.damper = 50f;
+                        leftjoint.massScale = 11f;
+                    }
+                }
+
+                GameObject line = new GameObject("Line");
+                LineRenderer liner = line.AddComponent<LineRenderer>();
+                UnityEngine.Color thecolor = Color.white;
+                liner.startColor = thecolor; liner.endColor = thecolor; liner.startWidth = 0.025f; liner.endWidth = 0.025f; liner.positionCount = 2; liner.useWorldSpace = true;
+                liner.SetPosition(0, GorillaTagger.Instance.leftHandTransform.position);
+                liner.SetPosition(1, leftgrapplePoint);
+                liner.material.shader = Shader.Find("GorillaTag/UberShader");
+                UnityEngine.Object.Destroy(line, Time.deltaTime);
+            }
+            else
+            {
+                isLeftGrappling = false;
+                UnityEngine.Object.Destroy(leftjoint);
+            }
+
+            if (rightGrab)
+            {
+                if (!isRightGrappling)
+                {
+                    isRightGrappling = true;
+                    RaycastHit righthit;
+                    if (Physics.Raycast(GorillaTagger.Instance.rightHandTransform.position, GorillaTagger.Instance.rightHandTransform.forward, out righthit, 100f))
+                    {
+                        rightgrapplePoint = righthit.point;
+
+                        rightjoint = GorillaTagger.Instance.gameObject.AddComponent<SpringJoint>();
+                        rightjoint.autoConfigureConnectedAnchor = false;
+                        rightjoint.connectedAnchor = rightgrapplePoint;
+
+                        float rightdistanceFromPoint = Vector3.Distance(GorillaTagger.Instance.bodyCollider.attachedRigidbody.position, rightgrapplePoint);
+
+                        rightjoint.maxDistance = rightdistanceFromPoint * 0.8f;
+                        rightjoint.minDistance = rightdistanceFromPoint * 0.25f;
+
+                        rightjoint.spring = 20f;
+                        rightjoint.damper = 50f;
+                        rightjoint.massScale = 11f;
+                    }
+                }
+
+                GameObject line = new GameObject("Line");
+                LineRenderer liner = line.AddComponent<LineRenderer>();
+                UnityEngine.Color thecolor = Color.white;
+                liner.startColor = thecolor; liner.endColor = thecolor; liner.startWidth = 0.025f; liner.endWidth = 0.025f; liner.positionCount = 2; liner.useWorldSpace = true;
+                liner.SetPosition(0, GorillaTagger.Instance.rightHandTransform.position);
+                liner.SetPosition(1, rightgrapplePoint);
+                liner.material.shader = Shader.Find("GorillaTag/UberShader");
+                UnityEngine.Object.Destroy(line, Time.deltaTime);
+            }
+            else
+            {
+                isRightGrappling = false;
+                UnityEngine.Object.Destroy(rightjoint);
+            }
+        }
+
+        public static void DisableSpiderMan()
+        {
+            isLeftGrappling = false;
+            UnityEngine.Object.Destroy(leftjoint);
+            isRightGrappling = false;
+            UnityEngine.Object.Destroy(rightjoint);
+        }
+
+        public static GameObject checkpointPoint;
+
+        public static void Checkpoint()
+        {
+            bool rightGrab = ControllerInputPoller.instance.rightGrab;
+            if (checkpointPoint == null && rightGrab)
+            {
+                checkpointPoint = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                UnityEngine.Object.Destroy(checkpointPoint.GetComponent<Rigidbody>());
+                UnityEngine.Object.Destroy(checkpointPoint.GetComponent<SphereCollider>());
+                checkpointPoint.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+                checkpointPoint.gameObject.GetComponent<Renderer>().material.shader = Shader.Find("GorillaTag/UberShader");
+                checkpointPoint.gameObject.GetComponent<Renderer>().material.color = Color.red;
+            }
+
+            if (checkpointPoint != null && rightGrab)
+            {
+                checkpointPoint.transform.position = GorillaLocomotion.Player.Instance.rightControllerTransform.position;
+            }
+
+            if (checkpointPoint != null && ControllerInputPoller.instance.rightControllerSecondaryButton)
+            {
+                foreach (MeshCollider renderer in Resources.FindObjectsOfTypeAll<MeshCollider>())
+                {
+                    renderer.enabled = false;
+                }
+                GorillaLocomotion.Player.Instance.transform.position = checkpointPoint.transform.position;
+                foreach (MeshCollider renderer in Resources.FindObjectsOfTypeAll<MeshCollider>())
+                {
+                    renderer.enabled = true;
+                }
+                checkpointPoint = null;
+            }
+
         }
 
         public static void TriggerFly()
